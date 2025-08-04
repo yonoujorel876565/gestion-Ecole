@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Enseignants - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-chalkboard-teacher"></i> Gestion des Enseignants</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="gestion-container">
+            <!-- Formulaire d'ajout -->
+            <div class="form-section">
+                <h2><i class="fas fa-plus"></i> Ajouter un enseignant</h2>
+                <form method="post" class="gestion-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ajouter">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">
+                                <i class="fas fa-user"></i> Nom d'utilisateur
+                            </label>
+                            <input type="text" id="username" name="username" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" id="email" name="email" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name">
+                                <i class="fas fa-user"></i> Prénom
+                            </label>
+                            <input type="text" id="first_name" name="first_name" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="last_name">
+                                <i class="fas fa-user"></i> Nom
+                            </label>
+                            <input type="text" id="last_name" name="last_name" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="specialite">
+                                <i class="fas fa-book"></i> Spécialité
+                            </label>
+                            <input type="text" id="specialite" name="specialite" required class="form-input" placeholder="Ex: Mathématiques, Français...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telephone">
+                                <i class="fas fa-phone"></i> Téléphone
+                            </label>
+                            <input type="tel" id="telephone" name="telephone" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter l'enseignant
+                    </button>
+                </form>
+            </div>
+
+            <!-- Liste des enseignants -->
+            <div class="list-section">
+                <h2><i class="fas fa-list"></i> Liste des enseignants ({{ enseignants.count }})</h2>
+                
+                {% if enseignants %}
+                <div class="enseignants-grid">
+                    {% for enseignant in enseignants %}
+                    <div class="enseignant-card">
+                        <div class="enseignant-header">
+                            <div class="enseignant-avatar">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="enseignant-info">
+                                <h3>{{ enseignant.user.get_full_name }}</h3>
+                                <p class="specialite">{{ enseignant.specialite }}</p>
+                            </div>
+                            <div class="enseignant-actions">
+                                <form method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet enseignant ?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="enseignant_id" value="{{ enseignant.id }}">
+                                    <button type="submit" class="btn-icon btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="enseignant-details">
+                            <div class="detail-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ enseignant.user.email }}</span>
+                            </div>
+                            {% if enseignant.telephone %}
+                            <div class="detail-item">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ enseignant.telephone }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="detail-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>{{ enseignant.cours_set.count }} cours</span>
+                            </div>
+                        </div>
+                        
+                        <div class="enseignant-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ enseignant.cours_set.count }}</span>
+                                <span class="stat-label">Cours</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ enseignant.cours_set.values_list|length }}</span>
+                                <span class="stat-label">Classes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ enseignant.cours_set.values_list|length }}</span>
+                                <span class="stat-label">Matières</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <h3>Aucun enseignant enregistré</h3>
+                    <p>Commencez par ajouter votre premier enseignant.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .gestion-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .form-section, .list-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2, .list-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2 i, .list-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .gestion-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .enseignants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .enseignant-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .enseignant-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .enseignant-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .enseignant-avatar {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .enseignant-info {
+            flex: 1;
+        }
+
+        .enseignant-info h3 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .specialite {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .enseignant-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: #e9ecef;
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .enseignant-details {
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+        }
+
+        .detail-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .enseignant-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .gestion-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html> 

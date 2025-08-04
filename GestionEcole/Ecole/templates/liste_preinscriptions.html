@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Préinscriptions à valider</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Préinscriptions à valider</h1>
+        {% if preinscriptions %}
+        <ul>
+            {% for p in preinscriptions %}
+            <li>
+                {{ p.nom }} {{ p.prenom }} - {{ p.classe }}
+                <a href="/admin/preinscriptions/{{ p.id }}/valider/" class="btn">Valider</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucune préinscription en attente.</p>
+        {% endif %}
+        <a href="/admin/" class="btn">Retour admin</a>
+    </div>
+</body>
+</html> 

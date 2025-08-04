@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préinscription - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <i class="fas fa-user-plus"></i>
+                <h1>Préinscription</h1>
+                <p>Remplissez ce formulaire pour préinscrire votre enfant</p>
+            </div>
+
+            <form method="post" class="preinscription-form">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.nom.id_for_label }}">
+                            <i class="fas fa-user"></i>
+                            {{ form.nom.label }}
+                        </label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}
+                            <div class="error-message">
+                                {% for error in form.nom.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.prenom.id_for_label }}">
+                            <i class="fas fa-user"></i>
+                            {{ form.prenom.label }}
+                        </label>
+                        {{ form.prenom }}
+                        {% if form.prenom.errors %}
+                            <div class="error-message">
+                                {% for error in form.prenom.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.date_naissance.id_for_label }}">
+                        <i class="fas fa-calendar"></i>
+                        {{ form.date_naissance.label }}
+                    </label>
+                    {{ form.date_naissance }}
+                    {% if form.date_naissance.errors %}
+                        <div class="error-message">
+                            {% for error in form.date_naissance.errors %}
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.telephone.id_for_label }}">
+                            <i class="fas fa-phone"></i>
+                            {{ form.telephone.label }}
+                        </label>
+                        {{ form.telephone }}
+                        {% if form.telephone.errors %}
+                            <div class="error-message">
+                                {% for error in form.telephone.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">
+                            <i class="fas fa-envelope"></i>
+                            {{ form.email.label }}
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="error-message">
+                                {% for error in form.email.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.session.id_for_label }}">
+                            <i class="fas fa-globe"></i>
+                            {{ form.session.label }}
+                        </label>
+                        {{ form.session }}
+                        {% if form.session.errors %}
+                            <div class="error-message">
+                                {% for error in form.session.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.classe.id_for_label }}">
+                            <i class="fas fa-graduation-cap"></i>
+                            {{ form.classe.label }}
+                        </label>
+                        {{ form.classe }}
+                        {% if form.classe.errors %}
+                            <div class="error-message">
+                                {% for error in form.classe.errors %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Envoyer la préinscription
+                    </button>
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à l'accueil
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Amélioration de l'expérience utilisateur
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.preinscription-form');
+            const inputs = form.querySelectorAll('input, select');
+            
+            // Animation des champs au focus
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.parentElement.classList.remove('focused');
+                    }
+                });
+            });
+            
+            // Validation en temps réel
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                inputs.forEach(input => {
+                    if (input.hasAttribute('required') && !input.value.trim()) {
+                        isValid = false;
+                        input.parentElement.classList.add('error');
+                    } else {
+                        input.parentElement.classList.remove('error');
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

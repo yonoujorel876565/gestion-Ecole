@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrateur - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/admin/" class="btn btn-secondary">
+                    <i class="fas fa-cog"></i> Admin Django
+                </a>
+                <a href="/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-tachometer-alt"></i> Tableau de bord Administrateur</h1>
+        
+        <!-- Statistiques rapides -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Élèves</h3>
+                    <p class="stat-number">{{ total_eleves }}</p>
+                    <p class="stat-label">Inscrits</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Enseignants</h3>
+                    <p class="stat-number">{{ total_enseignants }}</p>
+                    <p class="stat-label">Actifs</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Préinscriptions</h3>
+                    <p class="stat-number">{{ preinscriptions_en_attente }}</p>
+                    <p class="stat-label">En attente</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Classes</h3>
+                    <p class="stat-number">{{ total_classes }}</p>
+                    <p class="stat-label">Actives</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions principales -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3><i class="fas fa-user-plus"></i> Gestion des utilisateurs</h3>
+                <ul>
+                    <li><a href="{% url 'validation_preinscriptions' %}"><i class="fas fa-list"></i> Préinscriptions à valider</a></li>
+                                    <li><a href="{% url 'generer_bulletins' %}"><i class="fas fa-file-alt"></i> Générer les bulletins</a></li>
+                <li><a href="{% url 'gestion_eleves' %}"><i class="fas fa-users-cog"></i> Gérer les élèves</a></li>
+                <li><a href="{% url 'gestion_enseignants' %}"><i class="fas fa-chalkboard-teacher"></i> Gérer les enseignants</a></li>
+                </ul>
+            </div>
+
+            <div class="dashboard-card">
+                <h3><i class="fas fa-school"></i> Gestion académique</h3>
+                <ul>
+                                    <li><a href="{% url 'gestion_classes' %}"><i class="fas fa-layer-group"></i> Gérer les classes</a></li>
+                <li><a href="{% url 'gestion_matieres' %}"><i class="fas fa-book"></i> Gérer les matières</a></li>
+                <li><a href="{% url 'gestion_cours' %}"><i class="fas fa-calendar-alt"></i> Gérer les cours</a></li>
+                <li><a href="{% url 'gestion_examens' %}"><i class="fas fa-clipboard-list"></i> Gérer les examens</a></li>
+                </ul>
+            </div>
+
+            <div class="dashboard-card">
+                <h3><i class="fas fa-credit-card"></i> Gestion financière</h3>
+                <ul>
+                                    <li><a href="{% url 'gestion_paiements' %}"><i class="fas fa-money-bill-wave"></i> Voir les paiements</a></li>
+                <li><a href="{% url 'rapport_financier' %}"><i class="fas fa-chart-bar"></i> Rapports financiers</a></li>
+                <li><a href="{% url 'gestion_frais' %}"><i class="fas fa-receipt"></i> Gérer les frais</a></li>
+                <li><a href="{% url 'gestion_factures' %}"><i class="fas fa-file-invoice"></i> Factures</a></li>
+                </ul>
+            </div>
+
+            <div class="dashboard-card">
+                <h3><i class="fas fa-cog"></i> Configuration</h3>
+                <ul>
+                    <li><a href="/admin/"><i class="fas fa-calendar"></i> Année scolaire</a></li>
+                    <li><a href="{% url 'gestion_horaires' %}"><i class="fas fa-clock"></i> Horaires</a></li>
+                    <li><a href="{% url 'gestion_notifications' %}"><i class="fas fa-bell"></i> Notifications</a></li>
+                    <li><a href="{% url 'gestion_sauvegarde' %}"><i class="fas fa-database"></i> Sauvegarde</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="quick-actions">
+            <h2>Actions rapides</h2>
+            <div class="actions">
+                <a href="{% url 'validation_preinscriptions' %}" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Valider préinscriptions
+                </a>
+                <a href="/admin/generer-bulletins/" class="btn">
+                    <i class="fas fa-file-alt"></i> Générer bulletins
+                </a>
+                <a href="{% url 'gestion_notifications' %}" class="btn btn-info">
+                    <i class="fas fa-bell"></i> Envoyer notification
+                </a>
+                <a href="{% url 'gestion_sauvegarde' %}" class="btn btn-warning">
+                    <i class="fas fa-database"></i> Créer sauvegarde
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .user-info {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 1.5rem;
+        }
+
+        .stat-content h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .quick-actions {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .quick-actions h2 {
+            margin-bottom: 20px;
+        }
+    </style>
+</body>
+</html> 

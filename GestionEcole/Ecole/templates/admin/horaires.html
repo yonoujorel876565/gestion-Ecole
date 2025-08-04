@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Horaires - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-clock"></i> Gestion des Horaires</h1>
+
+        <!-- Formulaire d'ajout d'horaire -->
+        <div class="card">
+            <h2><i class="fas fa-plus"></i> Ajouter un horaire</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ajouter">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom">Nom de l'horaire</label>
+                        <input type="text" id="nom" name="nom" class="form-input" placeholder="ex: Horaire normal" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jour">Jour</label>
+                        <select id="jour" name="jour" class="form-select" required>
+                            <option value="">Sélectionner un jour</option>
+                            {% for value, label in jours %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="heure_debut">Heure de début</label>
+                        <input type="time" id="heure_debut" name="heure_debut" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="heure_fin">Heure de fin</label>
+                        <input type="time" id="heure_fin" name="heure_fin" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pause_debut">Début de pause (optionnel)</label>
+                        <input type="time" id="pause_debut" name="pause_debut" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pause_fin">Fin de pause (optionnel)</label>
+                        <input type="time" id="pause_fin" name="pause_fin" class="form-input">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Ajouter l'horaire
+                </button>
+            </form>
+        </div>
+
+        <!-- Liste des horaires -->
+        <div class="card">
+            <h2><i class="fas fa-list"></i> Horaires configurés</h2>
+            
+            {% if horaires %}
+            <div class="horaires-grid">
+                {% for horaire in horaires %}
+                <div class="horaire-card {% if not horaire.actif %}inactive{% endif %}">
+                    <div class="horaire-header">
+                        <h3>{{ horaire.nom }}</h3>
+                        <span class="jour-badge">{{ horaire.get_jour_display }}</span>
+                    </div>
+                    
+                    <div class="horaire-details">
+                        <div class="horaire-time">
+                            <i class="fas fa-clock"></i>
+                            {{ horaire.heure_debut|time:"H:i" }} - {{ horaire.heure_fin|time:"H:i" }}
+                        </div>
+                        
+                        {% if horaire.pause_debut and horaire.pause_fin %}
+                        <div class="horaire-pause">
+                            <i class="fas fa-coffee"></i>
+                            Pause: {{ horaire.pause_debut|time:"H:i" }} - {{ horaire.pause_fin|time:"H:i" }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="horaire-status">
+                            {% if horaire.actif %}
+                            <span class="status-active">Actif</span>
+                            {% else %}
+                            <span class="status-inactive">Inactif</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="horaire-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="editHoraire({{ horaire.id }})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="supprimer">
+                            <input type="hidden" name="horaire_id" value="{{ horaire.id }}">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet horaire ?')">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">Aucun horaire configuré.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de modification -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Modifier l'horaire</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="modifier">
+                <input type="hidden" name="horaire_id" id="edit_horaire_id">
+                
+                <div class="form-group">
+                    <label for="edit_nom">Nom de l'horaire</label>
+                    <input type="text" id="edit_nom" name="nom" class="form-input" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_jour">Jour</label>
+                        <select id="edit_jour" name="jour" class="form-select" required>
+                            {% for value, label in jours %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_actif">Statut</label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="edit_actif" name="actif">
+                            <span class="checkmark"></span>
+                            Actif
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_heure_debut">Heure de début</label>
+                        <input type="time" id="edit_heure_debut" name="heure_debut" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_heure_fin">Heure de fin</label>
+                        <input type="time" id="edit_heure_fin" name="heure_fin" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_pause_debut">Début de pause</label>
+                        <input type="time" id="edit_pause_debut" name="pause_debut" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_pause_fin">Fin de pause</label>
+                        <input type="time" id="edit_pause_fin" name="pause_fin" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .horaires-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .horaire-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .horaire-card.inactive {
+            opacity: 0.6;
+            border-left-color: #95a5a6;
+        }
+        
+        .horaire-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .horaire-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .jour-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .horaire-details {
+            margin-bottom: 15px;
+        }
+        
+        .horaire-time, .horaire-pause {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .horaire-time i, .horaire-pause i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .horaire-status {
+            margin-top: 10px;
+        }
+        
+        .status-active {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .status-inactive {
+            background: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .horaire-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+    </style>
+
+    <script>
+        // Données des horaires pour le modal
+        const horairesData = {
+            {% for horaire in horaires %}
+            {{ horaire.id }}: {
+                nom: "{{ horaire.nom }}",
+                jour: "{{ horaire.jour }}",
+                heure_debut: "{{ horaire.heure_debut|time:'H:i' }}",
+                heure_fin: "{{ horaire.heure_fin|time:'H:i' }}",
+                pause_debut: "{{ horaire.pause_debut|time:'H:i' }}" || "",
+                pause_fin: "{{ horaire.pause_fin|time:'H:i' }}" || "",
+                actif: {{ horaire.actif|yesno:"true,false" }}
+            },
+            {% endfor %}
+        };
+        
+        function editHoraire(horaireId) {
+            const horaire = horairesData[horaireId];
+            if (horaire) {
+                document.getElementById('edit_horaire_id').value = horaireId;
+                document.getElementById('edit_nom').value = horaire.nom;
+                document.getElementById('edit_jour').value = horaire.jour;
+                document.getElementById('edit_heure_debut').value = horaire.heure_debut;
+                document.getElementById('edit_heure_fin').value = horaire.heure_fin;
+                document.getElementById('edit_pause_debut').value = horaire.pause_debut;
+                document.getElementById('edit_pause_fin').value = horaire.pause_fin;
+                document.getElementById('edit_actif').checked = horaire.actif;
+                
+                document.getElementById('editModal').style.display = 'block';
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // Fermer le modal en cliquant sur X ou en dehors
+        document.querySelector('.close').onclick = closeModal;
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Parent - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user"></i> {{ user.get_full_name }}
+                </span>
+                <a href="/logout/" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-users"></i> Dashboard Parent</h1>
+            <p>Bienvenue, {{ user.get_full_name }} ! Suivez la scolarité de vos enfants.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-child"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ enfants_count }}</h3>
+                    <p>Enfants</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ moyenne_generale }}</h3>
+                    <p>Moyenne générale</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ paiements_count }}</h3>
+                    <p>Paiements</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ messages_count }}</h3>
+                    <p>Messages</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="children-overview">
+                <h2><i class="fas fa-child"></i> Mes enfants</h2>
+                <div class="children-grid">
+                    {% for enfant in enfants %}
+                    <div class="child-card">
+                        <div class="child-header">
+                            <i class="fas fa-user-graduate"></i>
+                            <h3>{{ enfant.user.get_full_name }}</h3>
+                            <span class="child-class">{{ enfant.inscription_set.first.classe.nom }}</span>
+                        </div>
+                        <div class="child-stats">
+                            <div class="child-stat">
+                                <span class="stat-label">Moyenne</span>
+                                <span class="stat-value">{{ enfant.moyenne|default:"N/A" }}/20</span>
+                            </div>
+                            <div class="child-stat">
+                                <span class="stat-label">Notes</span>
+                                <span class="stat-value">{{ enfant.notes_count }}</span>
+                            </div>
+                        </div>
+                        <div class="child-actions">
+                            <a href="/mes-notes/?eleve={{ enfant.id }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-chart-bar"></i> Notes
+                            </a>
+                            <a href="/mes-bulletins/?eleve={{ enfant.id }}" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-file-alt"></i> Bulletins
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-children">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Aucun enfant enregistré</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h2><i class="fas fa-bolt"></i> Actions rapides</h2>
+                <div class="actions-grid">
+                    <a href="/mes-notes/" class="action-card">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3>Notes des enfants</h3>
+                        <p>Consulter les évaluations</p>
+                    </a>
+                    <a href="/mes-bulletins/" class="action-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>Bulletins</h3>
+                        <p>Voir les bulletins scolaires</p>
+                    </a>
+                    <a href="/mes-paiements/" class="action-card">
+                        <i class="fas fa-credit-card"></i>
+                        <h3>Paiements</h3>
+                        <p>Suivre les frais de scolarité</p>
+                    </a>
+                    <a href="/conversations/" class="action-card">
+                        <i class="fas fa-comments"></i>
+                        <h3>Messages</h3>
+                        <p>Communiquer avec les enseignants</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="recent-activities">
+                <h2><i class="fas fa-history"></i> Activités récentes</h2>
+                <div class="activity-list">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-{{ activity.icon }}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>{{ activity.title }}</h4>
+                                <p>{{ activity.description }}</p>
+                                <span class="activity-time">{{ activity.date|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-activity">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Aucune activité récente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

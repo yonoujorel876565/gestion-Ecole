@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préinscription réussie - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="success-container">
+            <div class="success-header">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1>Préinscription réussie !</h1>
+                <p>Votre demande de préinscription a été enregistrée avec succès</p>
+            </div>
+
+            <div class="success-content">
+                <div class="success-card">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Prochaines étapes</h3>
+                    <ul>
+                        <li>Notre équipe va examiner votre demande</li>
+                        <li>Vous recevrez un email de confirmation</li>
+                        <li>Nous vous contacterons pour finaliser l'inscription</li>
+                        <li>Préparez les documents nécessaires</li>
+                    </ul>
+                </div>
+
+                <div class="success-card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Délai de traitement</h3>
+                    <p>Votre demande sera traitée dans les <strong>48 à 72 heures</strong> ouvrables.</p>
+                </div>
+
+                <div class="success-card">
+                    <i class="fas fa-phone"></i>
+                    <h3>Contact</h3>
+                    <p>Pour toute question, contactez-nous :</p>
+                    <div class="contact-info">
+                        <p><i class="fas fa-envelope"></i> contact@ecole.com</p>
+                        <p><i class="fas fa-phone"></i> +237 XXX XXX XXX</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-home"></i>
+                    Retour à l'accueil
+                </a>
+                <a href="/preinscription/" class="btn btn-secondary">
+                    <i class="fas fa-plus"></i>
+                    Nouvelle préinscription
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animation d'entrée
+        document.addEventListener('DOMContentLoaded', function() {
+            const successContainer = document.querySelector('.success-container');
+            const cards = document.querySelectorAll('.success-card');
+            
+            // Animation des cartes
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 200 * (index + 1));
+            });
+        });
+    </script>
+</body>
+</html> 

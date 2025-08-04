@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Matières - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-book"></i> Gestion des Matières</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="gestion-container">
+            <!-- Formulaire d'ajout -->
+            <div class="form-section">
+                <h2><i class="fas fa-plus"></i> Ajouter une matière</h2>
+                <form method="post" class="gestion-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ajouter">
+                    <div class="form-group">
+                        <label for="nom">
+                            <i class="fas fa-tag"></i> Nom de la matière
+                        </label>
+                        <input type="text" id="nom" name="nom" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea id="description" name="description" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </form>
+            </div>
+
+            <!-- Liste des matières -->
+            <div class="list-section">
+                <h2><i class="fas fa-list"></i> Liste des matières ({{ matieres.count }})</h2>
+                
+                {% if matieres %}
+                <div class="matieres-grid">
+                    {% for matiere in matieres %}
+                    <div class="matiere-card">
+                        <div class="matiere-header">
+                            <h3>{{ matiere.nom }}</h3>
+                            <div class="matiere-actions">
+                                <button class="btn-icon" onclick="modifierMatiere({{ matiere.id }}, '{{ matiere.nom }}', '{{ matiere.description }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette matière ?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="matiere_id" value="{{ matiere.id }}">
+                                    <button type="submit" class="btn-icon btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if matiere.description %}
+                        <p class="matiere-description">{{ matiere.description }}</p>
+                        {% endif %}
+                        <div class="matiere-stats">
+                            <span class="stat">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                {{ matiere.cours_set.count }} cours
+                            </span>
+                            <span class="stat">
+                                <i class="fas fa-file-alt"></i>
+                                {{ matiere.examen_set.count }} examens
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h3>Aucune matière enregistrée</h3>
+                    <p>Commencez par ajouter votre première matière.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de modification -->
+    <div id="modalModifier" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Modifier la matière</h3>
+                <span class="close" onclick="fermerModal()">&times;</span>
+            </div>
+            <form method="post" class="gestion-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="modifier">
+                <input type="hidden" name="matiere_id" id="matiere_id">
+                <div class="form-group">
+                    <label for="nom_modifier">
+                        <i class="fas fa-tag"></i> Nom de la matière
+                    </label>
+                    <input type="text" id="nom_modifier" name="nom" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="description_modifier">
+                        <i class="fas fa-align-left"></i> Description
+                    </label>
+                    <textarea id="description_modifier" name="description" class="form-textarea" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .gestion-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .form-section, .list-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2, .list-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2 i, .list-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .gestion-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-input, .form-textarea {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .matieres-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .matiere-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .matiere-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .matiere-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .matiere-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .matiere-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: #e9ecef;
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .matiere-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .matiere-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .stat i {
+            margin-right: 5px;
+            color: #3498db;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 20px 25px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        @media (max-width: 768px) {
+            .gestion-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        function modifierMatiere(id, nom, description) {
+            document.getElementById('matiere_id').value = id;
+            document.getElementById('nom_modifier').value = nom;
+            document.getElementById('description_modifier').value = description;
+            document.getElementById('modalModifier').style.display = 'block';
+        }
+
+        function fermerModal() {
+            document.getElementById('modalModifier').style.display = 'none';
+        }
+
+        // Fermer le modal en cliquant à l'extérieur
+        window.onclick = function(event) {
+            var modal = document.getElementById('modalModifier');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

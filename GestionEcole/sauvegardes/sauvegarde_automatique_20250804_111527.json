@@ -1,0 +1,4 @@
+Sauvegarde sauvegardeEcole - 20250804_111527
+Type: automatique
+Description: pour la securisation des donnees
+Tables: django_migrations, sqlite_sequence, auth_group_permissions, auth_user_groups, auth_user_user_permissions, Ecole_profile, Ecole_parent_enfants, Ecole_matiere, Ecole_session, Ecole_eleve, Ecole_enseignant, Ecole_parent, Ecole_bulletin, Ecole_conversation, Ecole_conversation_participants, Ecole_inscription, Ecole_examen, Ecole_cours, Ecole_message, Ecole_note, Ecole_paiement, Ecole_preinscription, Ecole_classe, django_admin_log, django_content_type, auth_permission, auth_group, auth_user, django_session, Ecole_horaire, Ecole_sauvegarde, Ecole_notification

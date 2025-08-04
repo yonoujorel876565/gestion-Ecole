@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Élève - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-graduate"></i> Élève
+                </span>
+                <a href="/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-user-graduate"></i> Mon Tableau de Bord</h1>
+        
+        <!-- Informations personnelles -->
+        <div class="profile-section">
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="profile-info">
+                    <h2>Marie Martin</h2>
+                    <p><i class="fas fa-id-card"></i> Matricule: ELEVE001</p>
+                    <p><i class="fas fa-layer-group"></i> Classe: 6e Francophone</p>
+                    <p><i class="fas fa-calendar"></i> Année: 2024-2025</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fonctionnalités principales -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-user"></i>
+                    <h3>Mes informations</h3>
+                </div>
+                <p>Consultez et mettez à jour vos informations personnelles</p>
+                <a href="#" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Mes notes</h3>
+                </div>
+                <p>Consultez vos notes et évaluations par matière</p>
+                <a href="/mes-notes/" class="btn">
+                    <i class="fas fa-eye"></i> Consulter
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Mes bulletins</h3>
+                </div>
+                <p>Accédez à vos bulletins de notes par trimestre</p>
+                <a href="/mes-bulletins/" class="btn">
+                    <i class="fas fa-download"></i> Télécharger
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Emploi du temps</h3>
+                </div>
+                <p>Consultez votre planning de cours hebdomadaire</p>
+                <a href="/emploi-du-temps/" class="btn">
+                    <i class="fas fa-calendar"></i> Voir
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-comments"></i>
+                    <h3>Messages</h3>
+                </div>
+                <p>Communiquez avec vos enseignants et l'administration</p>
+                <a href="/conversations/" class="btn">
+                    <i class="fas fa-envelope"></i> Ouvrir
+                </a>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <i class="fas fa-credit-card"></i>
+                    <h3>Mes paiements</h3>
+                </div>
+                <p>Consultez l'historique de vos paiements</p>
+                <a href="/mes-paiements/" class="btn">
+                    <i class="fas fa-receipt"></i> Consulter
+                </a>
+            </div>
+        </div>
+
+        <!-- Résumé académique -->
+        <div class="academic-summary">
+            <h2><i class="fas fa-chart-bar"></i> Résumé académique</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Moyenne générale</h4>
+                    <div class="summary-value">15.5/20</div>
+                    <div class="summary-progress">
+                        <div class="progress-bar" style="width: 77.5%"></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>Matières suivies</h4>
+                    <div class="summary-value">8</div>
+                    <p>Mathématiques, Français, Anglais, Histoire, Géographie, Sciences, Physique, Chimie</p>
+                </div>
+                <div class="summary-card">
+                    <h4>Prochain examen</h4>
+                    <div class="summary-value">15 Déc</div>
+                    <p>Contrôle Mathématiques</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .profile-section {
+            margin: 30px 0;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-avatar {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-right: 30px;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+        }
+
+        .profile-info p {
+            margin: 8px 0;
+            color: #7f8c8d;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-info p i {
+            margin-right: 10px;
+            color: #3498db;
+            width: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-header i {
+            font-size: 1.5rem;
+            color: #3498db;
+            margin-right: 15px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .dashboard-card p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .academic-summary {
+            margin-top: 40px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .summary-progress {
+            background: #ecf0f1;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .summary-card p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</body>
+</html> 

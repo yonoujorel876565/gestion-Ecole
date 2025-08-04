@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Valider préinscription</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Valider la préinscription</h1>
+        <p><strong>Nom :</strong> {{ preinscription.nom }}</p>
+        <p><strong>Prénom :</strong> {{ preinscription.prenom }}</p>
+        <p><strong>Date de naissance :</strong> {{ preinscription.date_naissance }}</p>
+        <p><strong>Téléphone :</strong> {{ preinscription.telephone }}</p>
+        <p><strong>Email :</strong> {{ preinscription.email }}</p>
+        <p><strong>Session :</strong> {{ preinscription.session }}</p>
+        <p><strong>Classe :</strong> {{ preinscription.classe }}</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn">Valider et créer le compte élève</button>
+        </form>
+        <a href="/admin/preinscriptions/" class="btn">Retour</a>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes notes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mes notes</h1>
+        {% if notes %}
+        <ul>
+            {% for n in notes %}
+            <li>
+                {{ n.examen.matiere }} - {{ n.examen.nom }} ({{ n.examen.date }}) : <strong>{{ n.valeur }}</strong> ({{ n.type_evaluation }})
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucune note enregistrée.</p>
+        {% endif %}
+        <a href="/dashboard/" class="btn">Retour au tableau de bord</a>
+    </div>
+</body>
+</html> 

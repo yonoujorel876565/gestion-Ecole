@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Paiements - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-money-bill-wave"></i> Gestion des Paiements</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistiques rapides -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Paiements Validés</h3>
+                    <p class="stat-number">{{ paiements|length }}</p>
+                    <p class="stat-label">Total validés</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>En Attente</h3>
+                    <p class="stat-number">0</p>
+                    <p class="stat-label">En cours de validation</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Ce Mois</h3>
+                    <p class="stat-number">{{ paiements|length }}</p>
+                    <p class="stat-label">Paiements du mois</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres et recherche -->
+        <div class="filters-section">
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Rechercher un élève..." class="form-input">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="valide">Validé</option>
+                    <option value="en_attente">En attente</option>
+                </select>
+                <select id="typeFilter" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="frais_scolarite">Frais de scolarité</option>
+                    <option value="inscription">Frais d'inscription</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Liste des paiements -->
+        <div class="paiements-section">
+            <h2><i class="fas fa-list"></i> Liste des Paiements</h2>
+            
+            {% if paiements %}
+            <div class="paiements-table">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Élève</th>
+                            <th>Classe</th>
+                            <th>Type</th>
+                            <th>Montant</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paiement in paiements %}
+                        <tr class="paiement-row" data-status="{{ paiement.statut }}" data-type="{{ paiement.type_paiement }}">
+                            <td>
+                                <div class="eleve-info">
+                                    <strong>{{ paiement.inscription.eleve.user.get_full_name }}</strong>
+                                    <small>{{ paiement.inscription.eleve.matricule }}</small>
+                                </div>
+                            </td>
+                            <td>{{ paiement.inscription.classe.nom }}</td>
+                            <td>
+                                <span class="type-badge type-{{ paiement.type_paiement }}">
+                                    {% if paiement.type_paiement == 'frais_scolarite' %}
+                                        <i class="fas fa-graduation-cap"></i> Scolarité
+                                    {% elif paiement.type_paiement == 'inscription' %}
+                                        <i class="fas fa-user-plus"></i> Inscription
+                                    {% else %}
+                                        <i class="fas fa-money-bill"></i> Autre
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ paiement.montant|floatformat:0 }} FCFA</strong>
+                            </td>
+                            <td>{{ paiement.date_paiement|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ paiement.statut }}">
+                                    {% if paiement.statut == 'valide' %}
+                                        <i class="fas fa-check"></i> Validé
+                                    {% else %}
+                                        <i class="fas fa-clock"></i> En attente
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    {% if paiement.statut == 'en_attente' %}
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="valider_paiement">
+                                        <input type="hidden" name="paiement_id" value="{{ paiement.id }}">
+                                        <button type="submit" class="btn btn-success btn-small">
+                                            <i class="fas fa-check"></i> Valider
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="rejeter_paiement">
+                                        <input type="hidden" name="paiement_id" value="{{ paiement.id }}">
+                                        <button type="submit" class="btn btn-warning btn-small">
+                                            <i class="fas fa-times"></i> Rejeter
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <button class="btn btn-secondary btn-small" onclick="voirDetails({{ paiement.id }})">
+                                        <i class="fas fa-eye"></i> Détails
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>Aucun paiement enregistré</h3>
+                <p>Les paiements apparaîtront ici une fois qu'ils seront effectués.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-content h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .filters-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .form-input, .form-select {
+            padding: 10px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .paiements-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .paiements-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .paiements-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .eleve-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .eleve-info small {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .type-badge, .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .type-frais_scolarite {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .type-inscription {
+            background: #e8f4fd;
+            color: #3498db;
+        }
+
+        .type-autre {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+
+        .status-valide {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .status-en_attente {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .data-table {
+                font-size: 0.9rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script>
+        // Filtrage des paiements
+        function filtrerPaiements() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            
+            const rows = document.querySelectorAll('.paiement-row');
+            
+            rows.forEach(row => {
+                const eleveName = row.querySelector('.eleve-info strong').textContent.toLowerCase();
+                const status = row.getAttribute('data-status');
+                const type = row.getAttribute('data-type');
+                
+                const matchSearch = eleveName.includes(searchTerm);
+                const matchStatus = !statusFilter || status === statusFilter;
+                const matchType = !typeFilter || type === typeFilter;
+                
+                if (matchSearch && matchStatus && matchType) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Événements de filtrage
+        document.getElementById('searchInput').addEventListener('input', filtrerPaiements);
+        document.getElementById('statusFilter').addEventListener('change', filtrerPaiements);
+        document.getElementById('typeFilter').addEventListener('change', filtrerPaiements);
+        
+        function voirDetails(paiementId) {
+            // Ici vous pouvez implémenter l'affichage des détails du paiement
+            alert('Fonctionnalité de détails à implémenter pour le paiement ID: ' + paiementId);
+        }
+    </script>
+</body>
+</html> 

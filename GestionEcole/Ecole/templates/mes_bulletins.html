@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes bulletins</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mes bulletins</h1>
+        {% if bulletins %}
+        <ul>
+            {% for b in bulletins %}
+            <li>
+                <strong>{{ b.periode }}</strong> : {{ b.total }} / 20<br>
+                <em>{{ b.appreciation }}</em>
+                <small>Édité le {{ b.date_edition }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucun bulletin disponible.</p>
+        {% endif %}
+        <a href="/dashboard/" class="btn">Retour au tableau de bord</a>
+    </div>
+</body>
+</html> 

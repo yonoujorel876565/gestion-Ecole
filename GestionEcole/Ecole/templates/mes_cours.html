@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes cours</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mes cours</h1>
+        {% if cours %}
+        <ul>
+            {% for c in cours %}
+            <li>
+                {{ c.matiere }} - {{ c.classe }}<br>
+                {{ c.jour|capfirst }} {{ c.heure_debut }} - {{ c.heure_fin }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucun cours trouvé.</p>
+        {% endif %}
+        <a href="/dashboard/" class="btn">Retour au tableau de bord</a>
+    </div>
+</body>
+</html> 

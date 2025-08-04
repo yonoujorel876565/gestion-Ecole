@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horaires - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-clock"></i> Horaires de l'École</h1>
+
+        <!-- Informations générales -->
+        <div class="info-card">
+            <div class="info-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>Informations importantes</h3>
+            </div>
+            <div class="info-content">
+                <p>Les horaires ci-dessous représentent les heures d'ouverture et de fermeture de l'établissement. 
+                Les pauses sont incluses dans ces horaires.</p>
+            </div>
+        </div>
+
+        <!-- Horaires par jour -->
+        <div class="horaires-grid">
+            {% regroup horaires by jour as horaires_par_jour %}
+            {% for jour in horaires_par_jour %}
+            <div class="jour-card">
+                <div class="jour-header">
+                    <h2>{{ jour.grouper|title }}</h2>
+                    <div class="jour-icon">
+                        {% if jour.grouper == 'lundi' %}
+                        <i class="fas fa-calendar-week"></i>
+                        {% elif jour.grouper == 'mardi' %}
+                        <i class="fas fa-calendar-day"></i>
+                        {% elif jour.grouper == 'mercredi' %}
+                        <i class="fas fa-calendar-alt"></i>
+                        {% elif jour.grouper == 'jeudi' %}
+                        <i class="fas fa-calendar-check"></i>
+                        {% elif jour.grouper == 'vendredi' %}
+                        <i class="fas fa-calendar-plus"></i>
+                        {% elif jour.grouper == 'samedi' %}
+                        <i class="fas fa-calendar-minus"></i>
+                        {% else %}
+                        <i class="fas fa-calendar-times"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="horaires-list">
+                    {% for horaire in jour.list %}
+                    <div class="horaire-item">
+                        <div class="horaire-main">
+                            <div class="horaire-time">
+                                <i class="fas fa-clock"></i>
+                                <span class="time-range">{{ horaire.heure_debut|time:"H:i" }} - {{ horaire.heure_fin|time:"H:i" }}</span>
+                            </div>
+                            <div class="horaire-name">{{ horaire.nom }}</div>
+                        </div>
+                        
+                        {% if horaire.pause_debut and horaire.pause_fin %}
+                        <div class="horaire-pause">
+                            <i class="fas fa-coffee"></i>
+                            <span>Pause: {{ horaire.pause_debut|time:"H:i" }} - {{ horaire.pause_fin|time:"H:i" }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="horaire-status">
+                            {% if horaire.actif %}
+                            <span class="status-badge active">
+                                <i class="fas fa-check-circle"></i> Actif
+                            </span>
+                            {% else %}
+                            <span class="status-badge inactive">
+                                <i class="fas fa-times-circle"></i> Inactif
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Aucun horaire configuré</h3>
+                <p>Les horaires n'ont pas encore été définis par l'administration.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Résumé des horaires -->
+        {% if horaires %}
+        <div class="summary-card">
+            <h3><i class="fas fa-chart-bar"></i> Résumé des horaires</h3>
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="summary-content">
+                        <span class="summary-number">{{ horaires|length }}</span>
+                        <span class="summary-label">Horaires configurés</span>
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="summary-icon active">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="summary-content">
+                        <span class="summary-number">{{ horaires|dictsort:"actif"|length }}</span>
+                        <span class="summary-label">Horaires actifs</span>
+                    </div>
+                </div>
+                
+                <div class="summary-item">
+                    <div class="summary-icon">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                    <div class="summary-content">
+                        <span class="summary-number">{{ horaires|dictsort:"pause_debut"|length }}</span>
+                        <span class="summary-label">Avec pause</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="actions-section">
+            <h3><i class="fas fa-tools"></i> Actions</h3>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="printHoraires()">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn btn-secondary" onclick="downloadHoraires()">
+                    <i class="fas fa-download"></i> Télécharger
+                </button>
+                <button class="btn btn-primary" onclick="refreshHoraires()">
+                    <i class="fas fa-sync"></i> Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .info-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .info-header i {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .info-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .horaires-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .jour-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .jour-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .jour-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .jour-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            text-transform: capitalize;
+        }
+        
+        .jour-icon {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+        
+        .horaires-list {
+            padding: 20px;
+        }
+        
+        .horaire-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        
+        .horaire-item:last-child {
+            border-bottom: none;
+        }
+        
+        .horaire-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .horaire-time {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .horaire-time i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+        
+        .time-range {
+            font-size: 1.1rem;
+        }
+        
+        .horaire-name {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .horaire-pause {
+            display: flex;
+            align-items: center;
+            color: #e67e22;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .horaire-pause i {
+            margin-right: 8px;
+        }
+        
+        .horaire-status {
+            text-align: right;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .summary-card h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .summary-icon {
+            background: #3498db;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .summary-icon.active {
+            background: #28a745;
+        }
+        
+        .summary-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .summary-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .actions-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .actions-section h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        @media print {
+            .nav, .actions-section {
+                display: none;
+            }
+            
+            .jour-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .horaires-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .horaire-main {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .horaire-name {
+                margin-top: 5px;
+            }
+            
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        function printHoraires() {
+            window.print();
+        }
+        
+        function downloadHoraires() {
+            alert('Fonctionnalité de téléchargement à implémenter');
+        }
+        
+        function refreshHoraires() {
+            location.reload();
+        }
+        
+        // Mettre en surbrillance l'horaire actuel
+        function highlightCurrentTime() {
+            const now = new Date();
+            const currentDay = now.toLocaleDateString('en-US', { weekday: 'lowercase' });
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            // Trouver l'horaire actuel et le mettre en surbrillance
+            const currentHoraire = document.querySelector(`[data-jour="${currentDay}"]`);
+            if (currentHoraire) {
+                currentHoraire.classList.add('current');
+            }
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            highlightCurrentTime();
+            
+            // Actualiser toutes les minutes
+            setInterval(highlightCurrentTime, 60000);
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Notifications - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-bell"></i> Mes Notifications</h1>
+
+        <!-- Statistiques des notifications -->
+        <div class="notification-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total</h3>
+                    <p class="stat-number">{{ notifications.count }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon unread">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Non lues</h3>
+                    <p class="stat-number">{{ notifications|dictsort:"lu"|length }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Cette semaine</h3>
+                    <p class="stat-number">{{ notifications|dictsort:"date_creation"|slice:":7"|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="notification-actions">
+            <button class="btn btn-primary" onclick="markAllAsRead()">
+                <i class="fas fa-check-double"></i> Marquer tout comme lu
+            </button>
+            <button class="btn btn-secondary" onclick="filterNotifications('all')">
+                <i class="fas fa-list"></i> Toutes
+            </button>
+            <button class="btn btn-warning" onclick="filterNotifications('unread')">
+                <i class="fas fa-envelope"></i> Non lues
+            </button>
+        </div>
+
+        <!-- Liste des notifications -->
+        <div class="notifications-container">
+            {% if notifications %}
+            <div class="notifications-list">
+                {% for notification in notifications %}
+                <div class="notification-card {% if not notification.lu %}unread{% endif %}" data-type="{{ notification.type_notification }}">
+                    <div class="notification-icon">
+                        {% if notification.type_notification == 'info' %}
+                        <i class="fas fa-info-circle text-info"></i>
+                        {% elif notification.type_notification == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        {% elif notification.type_notification == 'success' %}
+                        <i class="fas fa-check-circle text-success"></i>
+                        {% elif notification.type_notification == 'error' %}
+                        <i class="fas fa-times-circle text-danger"></i>
+                        {% else %}
+                        <i class="fas fa-cog text-secondary"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <h3>{{ notification.titre }}</h3>
+                            <div class="notification-meta">
+                                <span class="notification-time">{{ notification.date_creation|timesince }}</span>
+                                {% if not notification.lu %}
+                                <span class="unread-badge">Nouveau</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="notification-message">
+                            {{ notification.message }}
+                        </div>
+                        
+                        {% if notification.lien %}
+                        <div class="notification-link">
+                            <a href="{{ notification.lien }}" class="btn btn-sm btn-outline">
+                                <i class="fas fa-external-link-alt"></i> Voir plus
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="notification-actions">
+                        {% if not notification.lu %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Marquer comme lu
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3>Aucune notification</h3>
+                <p>Vous n'avez pas encore reçu de notifications.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if notifications.has_other_pages %}
+        <div class="pagination">
+            {% if notifications.has_previous %}
+            <a href="?page={{ notifications.previous_page_number }}" class="btn btn-secondary">
+                <i class="fas fa-chevron-left"></i> Précédent
+            </a>
+            {% endif %}
+            
+            <span class="page-info">
+                Page {{ notifications.number }} sur {{ notifications.paginator.num_pages }}
+            </span>
+            
+            {% if notifications.has_next %}
+            <a href="?page={{ notifications.next_page_number }}" class="btn btn-secondary">
+                Suivant <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .notification-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.unread {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .stat-content h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #7f8c8d;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .notifications-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .notifications-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .notification-card {
+            display: flex;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+            align-items: flex-start;
+        }
+        
+        .notification-card:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .notification-card.unread {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+        }
+        
+        .notification-icon {
+            margin-right: 15px;
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .notification-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification-time {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .unread-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .notification-message {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        
+        .notification-link {
+            margin-top: 10px;
+        }
+        
+        .notification-actions {
+            margin-left: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .page-info {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        
+        .text-info { color: #17a2b8; }
+        .text-warning { color: #ffc107; }
+        .text-success { color: #28a745; }
+        .text-danger { color: #dc3545; }
+        .text-secondary { color: #6c757d; }
+        
+        @media (max-width: 768px) {
+            .notification-card {
+                flex-direction: column;
+            }
+            
+            .notification-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .notification-meta {
+                margin-top: 5px;
+            }
+        }
+    </style>
+
+    <script>
+        function markAllAsRead() {
+            if (confirm('Marquer toutes les notifications comme lues ?')) {
+                alert('Fonctionnalité à implémenter');
+            }
+        }
+        
+        function filterNotifications(filter) {
+            const cards = document.querySelectorAll('.notification-card');
+            
+            cards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'flex';
+                } else if (filter === 'unread') {
+                    if (card.classList.contains('unread')) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Auto-refresh des notifications non lues
+        setInterval(function() {
+            // Vérifier les nouvelles notifications
+            // Implémenter une requête AJAX pour vérifier les nouvelles notifications
+        }, 30000); // Toutes les 30 secondes
+    </script>
+</body>
+</html> 

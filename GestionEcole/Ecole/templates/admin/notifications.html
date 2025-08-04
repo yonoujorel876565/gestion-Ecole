@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Notifications - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-bell"></i> Gestion des Notifications</h1>
+
+        <!-- Formulaire d'envoi de notification -->
+        <div class="card">
+            <h2><i class="fas fa-paper-plane"></i> Envoyer une notification</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="envoyer">
+                
+                <div class="form-group">
+                    <label for="titre">Titre de la notification</label>
+                    <input type="text" id="titre" name="titre" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" class="form-textarea" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="type_notification">Type de notification</label>
+                        <select id="type_notification" name="type_notification" class="form-select">
+                            {% for value, label in types_notification %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Destinataires</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="destinataires" value="all" id="select-all">
+                                <span class="checkmark"></span>
+                                Tous les utilisateurs
+                            </label>
+                            {% for user in utilisateurs %}
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="destinataires" value="{{ user.id }}" class="user-checkbox">
+                                <span class="checkmark"></span>
+                                {{ user.get_full_name|default:user.username }} ({{ user.email }})
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Envoyer la notification
+                </button>
+            </form>
+        </div>
+
+        <!-- Liste des notifications -->
+        <div class="card">
+            <h2><i class="fas fa-list"></i> Historique des notifications</h2>
+            
+            {% if notifications %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Destinataire</th>
+                            <th>Titre</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notification in notifications %}
+                        <tr class="{% if not notification.lu %}unread{% endif %}">
+                            <td>{{ notification.destinataire.get_full_name|default:notification.destinataire.username }}</td>
+                            <td>
+                                <strong>{{ notification.titre }}</strong>
+                                <br><small>{{ notification.message|truncatechars:50 }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ notification.type_notification }}">
+                                    {{ notification.get_type_notification_display }}
+                                </span>
+                            </td>
+                            <td>{{ notification.date_creation|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if notification.lu %}
+                                <span class="badge badge-success">Lu</span>
+                                {% else %}
+                                <span class="badge badge-warning">Non lu</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette notification ?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Aucune notification envoyée.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .checkbox-group {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .checkbox-item {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .unread {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-info { background-color: #17a2b8; color: white; }
+        .badge-warning { background-color: #ffc107; color: #212529; }
+        .badge-success { background-color: #28a745; color: white; }
+        .badge-error { background-color: #dc3545; color: white; }
+        .badge-system { background-color: #6c757d; color: white; }
+    </style>
+
+    <script>
+        // Gestion de la sélection "Tous les utilisateurs"
+        document.getElementById('select-all').addEventListener('change', function() {
+            const userCheckboxes = document.querySelectorAll('.user-checkbox');
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+        
+        // Mise à jour de la case "Tous" selon les sélections individuelles
+        document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = Array.from(document.querySelectorAll('.user-checkbox')).every(cb => cb.checked);
+                const someChecked = Array.from(document.querySelectorAll('.user-checkbox')).some(cb => cb.checked);
+                
+                const selectAll = document.getElementById('select-all');
+                selectAll.checked = allChecked;
+                selectAll.indeterminate = someChecked && !allChecked;
+            });
+        });
+    </script>
+</body>
+</html> 

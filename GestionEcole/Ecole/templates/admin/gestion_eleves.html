@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Élèves - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-users"></i> Gestion des Élèves</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="gestion-container">
+            <!-- Formulaire d'ajout -->
+            <div class="form-section">
+                <h2><i class="fas fa-plus"></i> Ajouter un élève</h2>
+                <form method="post" class="gestion-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ajouter">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">
+                                <i class="fas fa-user"></i> Nom d'utilisateur
+                            </label>
+                            <input type="text" id="username" name="username" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" id="email" name="email" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name">
+                                <i class="fas fa-user"></i> Prénom
+                            </label>
+                            <input type="text" id="first_name" name="first_name" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="last_name">
+                                <i class="fas fa-user"></i> Nom
+                            </label>
+                            <input type="text" id="last_name" name="last_name" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="matricule">
+                                <i class="fas fa-id-card"></i> Matricule
+                            </label>
+                            <input type="text" id="matricule" name="matricule" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="date_naissance">
+                                <i class="fas fa-birthday-cake"></i> Date de naissance
+                            </label>
+                            <input type="date" id="date_naissance" name="date_naissance" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="telephone">
+                                <i class="fas fa-phone"></i> Téléphone
+                            </label>
+                            <input type="tel" id="telephone" name="telephone" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="adresse">
+                                <i class="fas fa-map-marker-alt"></i> Adresse
+                            </label>
+                            <input type="text" id="adresse" name="adresse" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter l'élève
+                    </button>
+                </form>
+            </div>
+
+            <!-- Liste des élèves -->
+            <div class="list-section">
+                <h2><i class="fas fa-list"></i> Liste des élèves ({{ eleves.count }})</h2>
+                
+                <!-- Filtres -->
+                <div class="filtres">
+                    <div class="filtre-groupe">
+                        <label for="classeFilter">
+                            <i class="fas fa-filter"></i> Filtrer par classe
+                        </label>
+                        <form method="get" id="filtreForm" class="filtre-form">
+                            <select name="classe" id="classeFilter" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes les classes</option>
+                                {% for classe in classes %}
+                                <option value="{{ classe.id }}" {% if classe.id|stringformat:"s" == classe_selectionnee %}selected{% endif %}>
+                                    {{ classe.nom }} ({{ classe.session.nom }})
+                                </option>
+                                {% endfor %}
+                    </select>
+                        </form>
+                    </div>
+                    
+                    <div class="filtre-groupe">
+                        <label for="searchInput">
+                            <i class="fas fa-search"></i> Rechercher
+                        </label>
+                        <input type="text" id="searchInput" placeholder="Rechercher un élève..." class="form-input">
+                    </div>
+                    
+                    {% if classe_selectionnee %}
+                    <div class="filtre-actif">
+                        <span class="badge badge-primary">
+                            <i class="fas fa-filter"></i> Filtre actif
+                        </span>
+                        <a href="{% url 'gestion_eleves' %}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-times"></i> Effacer le filtre
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if eleves %}
+                <div class="eleves-grid">
+                    {% for eleve in eleves %}
+                    <div class="eleve-card" data-classe="{{ eleve.inscription_set.first.classe.nom|default:'' }}">
+                        <div class="eleve-header">
+                            <div class="eleve-avatar">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="eleve-info">
+                                <h3>{{ eleve.user.get_full_name }}</h3>
+                                <p class="matricule">{{ eleve.matricule }}</p>
+                                {% if eleve.inscription_set.first %}
+                                <p class="classe">{{ eleve.inscription_set.first.classe.nom }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="eleve-actions">
+                                <form method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet élève ?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="eleve_id" value="{{ eleve.id }}">
+                                    <button type="submit" class="btn-icon btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="eleve-details">
+                            {% if eleve.user.email %}
+                            <div class="detail-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ eleve.user.email }}</span>
+                            </div>
+                            {% endif %}
+                            {% if eleve.telephone %}
+                            <div class="detail-item">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ eleve.telephone }}</span>
+                            </div>
+                            {% endif %}
+                            {% if eleve.date_naissance %}
+                            <div class="detail-item">
+                                <i class="fas fa-birthday-cake"></i>
+                                <span>{{ eleve.date_naissance|date:"d/m/Y" }}</span>
+                            </div>
+                            {% endif %}
+                            {% if eleve.adresse %}
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ eleve.adresse }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="eleve-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ eleve.note_set.count }}</span>
+                                <span class="stat-label">Notes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ eleve.bulletin_set.count }}</span>
+                                <span class="stat-label">Bulletins</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ eleve.inscription_set.count }}</span>
+                                <span class="stat-label">Inscriptions</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>Aucun élève enregistré</h3>
+                    <p>Commencez par ajouter votre premier élève.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .gestion-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .form-section, .list-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2, .list-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2 i, .list-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .gestion-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-input, .form-select {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filtres {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .filtre-groupe {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .filtre-groupe label {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .filtre-groupe label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .filtre-form {
+            margin: 0;
+        }
+
+        .filtre-form select {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #2c3e50;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            width: 100%;
+        }
+
+        .filtre-form select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .filtre-actif {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .filtre-actif .badge {
+            background-color: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filtre-actif .btn-sm {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-decoration: none;
+            border: 1px solid #d4d4d4;
+            transition: all 0.2s ease;
+        }
+
+        .filtre-actif .btn-sm:hover {
+            background-color: #d4d4d4;
+            color: #2c3e50;
+        }
+
+        .filtre-actif .btn-sm i {
+            margin-right: 4px;
+        }
+
+        .eleves-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .eleve-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+
+        .eleve-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .eleve-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .eleve-avatar {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .eleve-info {
+            flex: 1;
+        }
+
+        .eleve-info h3 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .matricule {
+            margin: 0 0 3px 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .classe {
+            margin: 0;
+            color: #3498db;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .eleve-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: #e9ecef;
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .eleve-details {
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+        }
+
+        .detail-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .eleve-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .gestion-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .filtres {
+                flex-direction: column;
+            }
+            
+            .filtre-groupe {
+                min-width: auto;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Recherche en temps réel
+            const searchInput = document.getElementById('searchInput');
+            const eleveCards = document.querySelectorAll('.eleve-card');
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                eleveCards.forEach(card => {
+                    const eleveName = card.querySelector('h3').textContent.toLowerCase();
+                    const matricule = card.querySelector('.matricule').textContent.toLowerCase();
+                    const classe = card.querySelector('.classe') ? card.querySelector('.classe').textContent.toLowerCase() : '';
+                
+                    const matches = eleveName.includes(searchTerm) || 
+                                   matricule.includes(searchTerm) || 
+                                   classe.includes(searchTerm);
+                
+                    if (matches) {
+                    card.style.display = 'block';
+                        card.style.opacity = '1';
+                } else {
+                        card.style.opacity = '0.3';
+                    card.style.display = 'none';
+                }
+            });
+                
+                // Mettre à jour le compteur
+                updateEleveCount();
+            });
+            
+            // Fonction pour mettre à jour le compteur d'élèves
+            function updateEleveCount() {
+                const visibleCards = document.querySelectorAll('.eleve-card[style*="display: block"], .eleve-card:not([style*="display: none"])');
+                const countElement = document.querySelector('.list-section h2');
+                const originalText = countElement.textContent;
+                const baseText = originalText.replace(/\(\d+\)/, '');
+                countElement.textContent = `${baseText} (${visibleCards.length})`;
+            }
+            
+            // Animation des cartes au chargement
+            eleveCards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+            
+            // Confirmation de suppression
+            const deleteForms = document.querySelectorAll('form[onsubmit*="confirm"]');
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const eleveName = this.closest('.eleve-card').querySelector('h3').textContent;
+                    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'élève "${eleveName}" ?`)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+            
+            // Indicateur de chargement pour le filtre
+            const classeFilter = document.getElementById('classeFilter');
+            classeFilter.addEventListener('change', function() {
+                // Ajouter un indicateur de chargement
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'loading-indicator';
+                loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+                loadingIndicator.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    z-index: 9999;
+                    font-size: 16px;
+                `;
+                document.body.appendChild(loadingIndicator);
+                
+                // Le formulaire se soumet automatiquement grâce à onchange
+            });
+            
+            // Message d'information sur les filtres
+            if (document.querySelector('.filtre-actif')) {
+                const infoMessage = document.createElement('div');
+                infoMessage.className = 'info-message';
+                infoMessage.innerHTML = `
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Filtre actif :</strong> Seuls les élèves de la classe sélectionnée sont affichés.
+                `;
+                infoMessage.style.cssText = `
+                    background: #e8f4fd;
+                    border: 1px solid #3498db;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                    color: #2c3e50;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                `;
+                
+                const listSection = document.querySelector('.list-section');
+                listSection.insertBefore(infoMessage, listSection.firstChild);
+            }
+        });
+    </script>
+</body>
+</html> 

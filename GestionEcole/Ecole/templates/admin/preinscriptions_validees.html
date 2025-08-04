@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préinscriptions Validées - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-check-circle"></i> Préinscriptions Validées</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistiques -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Validées</h3>
+                    <p class="stat-number">{{ preinscriptions.count }}</p>
+                    <p class="stat-label">Préinscriptions traitées</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Élèves Créés</h3>
+                    <p class="stat-number">{{ preinscriptions.count }}</p>
+                    <p class="stat-label">Comptes élèves générés</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Ce Mois</h3>
+                    <p class="stat-number">{{ preinscriptions.count }}</p>
+                    <p class="stat-label">Validations du mois</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-section">
+            <div class="filters">
+                <input type="text" id="searchInput" placeholder="Rechercher un élève..." class="form-input">
+                <select id="classeFilter" class="form-select">
+                    <option value="">Toutes les classes</option>
+                    <!-- Options seront ajoutées dynamiquement -->
+                </select>
+                <select id="sessionFilter" class="form-select">
+                    <option value="">Toutes les sessions</option>
+                    <option value="francophone">Francophone</option>
+                    <option value="anglophone">Anglophone</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Liste des préinscriptions validées -->
+        <div class="preinscriptions-section">
+            <h2><i class="fas fa-list"></i> Liste des Préinscriptions Validées</h2>
+            
+            {% if preinscriptions %}
+            <div class="preinscriptions-grid">
+                {% for preinscription in preinscriptions %}
+                <div class="preinscription-card" data-classe="{{ preinscription.classe.nom }}" data-session="{{ preinscription.session.nom }}">
+                    <div class="preinscription-header">
+                        <div class="eleve-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="eleve-info">
+                            <h3>{{ preinscription.nom }} {{ preinscription.prenom }}</h3>
+                            <p class="classe">{{ preinscription.classe.nom }} ({{ preinscription.session.get_nom_display }})</p>
+                            <p class="date-validation">Validée le {{ preinscription.date_preinscription|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="status-badge">
+                            <i class="fas fa-check"></i> Validée
+                        </div>
+                    </div>
+                    
+                    <div class="preinscription-details">
+                        <div class="detail-item">
+                            <i class="fas fa-birthday-cake"></i>
+                            <span>Né(e) le {{ preinscription.date_naissance|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-phone"></i>
+                            <span>{{ preinscription.telephone }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>{{ preinscription.email }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preinscription-actions">
+                        <button class="btn btn-secondary btn-small" onclick="voirDetails({{ preinscription.id }})">
+                            <i class="fas fa-eye"></i> Détails
+                        </button>
+                        <button class="btn btn-success btn-small" onclick="voirEleve({{ preinscription.id }})">
+                            <i class="fas fa-user"></i> Voir Élève
+                        </button>
+                        <button class="btn btn-primary btn-small" onclick="genererBulletin({{ preinscription.id }})">
+                            <i class="fas fa-file-alt"></i> Bulletin
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>Aucune préinscription validée</h3>
+                <p>Les préinscriptions validées apparaîtront ici une fois qu'elles seront traitées.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-content h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .filters-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .form-input, .form-select {
+            padding: 10px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .preinscriptions-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .preinscriptions-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .preinscriptions-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .preinscriptions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .preinscription-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #27ae60;
+            transition: transform 0.3s ease;
+        }
+
+        .preinscription-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .preinscription-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .eleve-avatar {
+            background: linear-gradient(45deg, #27ae60, #229954);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .eleve-info {
+            flex: 1;
+        }
+
+        .eleve-info h3 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .classe {
+            margin: 0 0 3px 0;
+            color: #3498db;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .date-validation {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            background: #e8f5e8;
+            color: #27ae60;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .preinscription-details {
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #7f8c8d;
+        }
+
+        .detail-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .preinscription-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            
+            .preinscription-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script>
+        // Filtrage des préinscriptions
+        function filtrerPreinscriptions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const classeFilter = document.getElementById('classeFilter').value;
+            const sessionFilter = document.getElementById('sessionFilter').value;
+            
+            const cards = document.querySelectorAll('.preinscription-card');
+            
+            cards.forEach(card => {
+                const eleveName = card.querySelector('.eleve-info h3').textContent.toLowerCase();
+                const classe = card.getAttribute('data-classe');
+                const session = card.getAttribute('data-session');
+                
+                const matchSearch = eleveName.includes(searchTerm);
+                const matchClasse = !classeFilter || classe === classeFilter;
+                const matchSession = !sessionFilter || session === sessionFilter;
+                
+                if (matchSearch && matchClasse && matchSession) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Événements de filtrage
+        document.getElementById('searchInput').addEventListener('input', filtrerPreinscriptions);
+        document.getElementById('classeFilter').addEventListener('change', filtrerPreinscriptions);
+        document.getElementById('sessionFilter').addEventListener('change', filtrerPreinscriptions);
+        
+        function voirDetails(preinscriptionId) {
+            alert('Fonctionnalité de détails à implémenter pour ID: ' + preinscriptionId);
+        }
+        
+        function voirEleve(preinscriptionId) {
+            alert('Fonctionnalité de visualisation de l\'élève à implémenter pour ID: ' + preinscriptionId);
+        }
+        
+        function genererBulletin(preinscriptionId) {
+            alert('Fonctionnalité de génération de bulletin à implémenter pour ID: ' + preinscriptionId);
+        }
+    </script>
+</body>
+</html> 

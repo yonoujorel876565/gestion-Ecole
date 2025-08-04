@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Nouvelle conversation</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Nouvelle conversation</h1>
+        <form method="post">
+            {% csrf_token %}
+            <p>
+                <label for="sujet">Sujet :</label><br>
+                <input type="text" name="sujet" id="sujet" required style="width: 100%;">
+            </p>
+            <p>
+                <label for="destinataire">Destinataire :</label><br>
+                <select name="destinataire" id="destinataire" required style="width: 100%;">
+                    <option value="">-- Choisir --</option>
+                    {% for user in utilisateurs %}
+                    <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.username }})</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>
+                <label for="contenu">Message :</label><br>
+                <textarea name="contenu" id="contenu" required style="width: 100%; height: 150px;"></textarea>
+            </p>
+            <button type="submit" class="btn">Envoyer</button>
+        </form>
+        <a href="/conversations/" class="btn">Retour aux conversations</a>
+    </div>
+</body>
+</html> 

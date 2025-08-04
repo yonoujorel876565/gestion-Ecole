@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Parents - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-users"></i> Gestion des Parents</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="gestion-container">
+            <!-- Formulaire d'ajout -->
+            <div class="form-section">
+                <h2><i class="fas fa-plus"></i> Ajouter un parent</h2>
+                <form method="post" class="gestion-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="ajouter">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">
+                                <i class="fas fa-user"></i> Nom d'utilisateur
+                            </label>
+                            <input type="text" id="username" name="username" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i> Email
+                            </label>
+                            <input type="email" id="email" name="email" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="first_name">
+                                <i class="fas fa-user"></i> Prénom
+                            </label>
+                            <input type="text" id="first_name" name="first_name" required class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="last_name">
+                                <i class="fas fa-user"></i> Nom
+                            </label>
+                            <input type="text" id="last_name" name="last_name" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="telephone">
+                                <i class="fas fa-phone"></i> Téléphone
+                            </label>
+                            <input type="tel" id="telephone" name="telephone" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="adresse">
+                                <i class="fas fa-map-marker-alt"></i> Adresse
+                            </label>
+                            <input type="text" id="adresse" name="adresse" class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="enfants">
+                            <i class="fas fa-child"></i> Enfants (optionnel)
+                        </label>
+                        <select id="enfants" name="enfants" multiple class="form-select" size="5">
+                            {% for eleve in eleves %}
+                            <option value="{{ eleve.id }}">
+                                {{ eleve.user.get_full_name }} ({{ eleve.matricule }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small>Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs enfants</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Ajouter le parent
+                    </button>
+                </form>
+            </div>
+
+            <!-- Liste des parents -->
+            <div class="list-section">
+                <h2><i class="fas fa-list"></i> Liste des parents ({{ parents.count }})</h2>
+                
+                {% if parents %}
+                <div class="parents-grid">
+                    {% for parent in parents %}
+                    <div class="parent-card">
+                        <div class="parent-header">
+                            <div class="parent-avatar">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div class="parent-info">
+                                <h3>{{ parent.user.get_full_name }}</h3>
+                                <p class="email">{{ parent.user.email }}</p>
+                            </div>
+                            <div class="parent-actions">
+                                <button class="btn-icon btn-secondary" onclick="toggleEnfantsForm({{ parent.id }})">
+                                    <i class="fas fa-child"></i>
+                                </button>
+                                <form method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce parent ?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="parent_id" value="{{ parent.id }}">
+                                    <button type="submit" class="btn-icon btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="parent-details">
+                            {% if parent.telephone %}
+                            <div class="detail-item">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ parent.telephone }}</span>
+                            </div>
+                            {% endif %}
+                            {% if parent.adresse %}
+                            <div class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ parent.adresse }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="detail-item">
+                                <i class="fas fa-child"></i>
+                                <span>{{ parent.enfants.count }} enfant(s)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulaire pour modifier les enfants (caché par défaut) -->
+                        <div id="enfants-form-{{ parent.id }}" class="enfants-form" style="display: none;">
+                            <form method="post" class="enfants-form-content">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="modifier_enfants">
+                                <input type="hidden" name="parent_id" value="{{ parent.id }}">
+                                
+                                <h4>Modifier les enfants</h4>
+                                <select name="enfants" multiple class="form-select" size="4">
+                                    {% for eleve in eleves %}
+                                    <option value="{{ eleve.id }}" {% if eleve in parent.enfants.all %}selected{% endif %}>
+                                        {{ eleve.user.get_full_name }} ({{ eleve.matricule }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="parent-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ parent.enfants.count }}</span>
+                                <span class="stat-label">Enfants</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ parent.enfants.all|length }}</span>
+                                <span class="stat-label">Inscrits</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">-</span>
+                                <span class="stat-label">Paiements</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-friends"></i>
+                    <h3>Aucun parent enregistré</h3>
+                    <p>Commencez par ajouter votre premier parent.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .gestion-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .form-section, .list-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2, .list-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-section h2 i, .list-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .gestion-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-input, .form-select {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-group small {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .parents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .parent-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .parent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .parent-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .parent-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .parent-avatar i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .parent-info {
+            flex: 1;
+        }
+
+        .parent-info h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .parent-info .email {
+            margin: 5px 0 0 0;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .parent-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-icon.btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-icon.btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .parent-details {
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #34495e;
+        }
+
+        .detail-item i {
+            width: 20px;
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .parent-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .enfants-form {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .enfants-form h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .enfants-form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .gestion-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .parents-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        function toggleEnfantsForm(parentId) {
+            const form = document.getElementById(`enfants-form-${parentId}`);
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+            } else {
+                form.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,205 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emploi du Temps - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-calendar-alt"></i> Emploi du Temps</h1>
+
+        {% if emploi %}
+        <div class="timetable-container">
+            <table class="timetable">
+                <thead>
+                    <tr>
+                        <th class="time-header">Heure</th>
+                        {% for jour, nom_jour in jours %}
+                        <th class="day-header">{{ nom_jour }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for debut, fin in creneaux %}
+                    <tr>
+                        <td class="creneau-header">
+                            <div class="horaire">
+                                <div class="heure-debut">{{ debut }}</div>
+                                <div class="heure-fin">{{ fin }}</div>
+                            </div>
+                        </td>
+                        {% for jour, nom_jour in jours %}
+                        <td class="cours-cell">
+                            {% with cours_jour=emploi|get_item:jour %}
+                                {% if cours_jour %}
+                                    {% for cours in cours_jour %}
+                                        {% if cours.heure_debut|time:"H:i" == debut %}
+                                        <div class="cours-info">
+                                            <div class="matiere">{{ cours.matiere.nom }}</div>
+                                            <div class="classe">{{ cours.classe.nom }}</div>
+                                            {% if cours.enseignant.user %}
+                                            <div class="enseignant">
+                                                <i class="fas fa-user"></i> {{ cours.enseignant.user.get_full_name|default:cours.enseignant.user.username }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            {% if not emploi|get_item:jour %}
+                            <div class="cours-vide">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-calendar-times"></i>
+            </div>
+            <h3>Aucun emploi du temps disponible</h3>
+            <p>L'emploi du temps n'a pas encore été configuré pour votre profil.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .timetable-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .timetable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .time-header, .day-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .creneau-header {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            border-right: 1px solid #dee2e6;
+            min-width: 100px;
+        }
+
+        .horaire {
+            font-size: 0.9rem;
+        }
+
+        .heure-debut {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .heure-fin {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .cours-cell {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            min-height: 80px;
+            vertical-align: top;
+        }
+
+        .cours-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .cours-info .matiere {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .cours-info .classe {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .cours-info .enseignant {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        .cours-vide {
+            text-align: center;
+            color: #dee2e6;
+            font-size: 1.2rem;
+            padding: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .timetable {
+                font-size: 0.8rem;
+            }
+            
+            .creneau-header {
+                min-width: 80px;
+                padding: 5px;
+            }
+            
+            .cours-cell {
+                padding: 5px;
+            }
+        }
+    </style>
+</body>
+</html> 

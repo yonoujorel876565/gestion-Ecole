@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes paiements</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mes paiements</h1>
+        {% if paiements %}
+        <ul>
+            {% for p in paiements %}
+            <li>
+                {{ p.date_paiement }} - {{ p.montant }} FCFA - {{ p.get_mode_display }} ({{ p.get_statut_display }})<br>
+                <small>Inscription : {{ p.inscription.classe }} ({{ p.inscription.annee_scolaire }})</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Aucun paiement enregistré.</p>
+        {% endif %}
+        <a href="/dashboard/" class="btn">Retour au tableau de bord</a>
+    </div>
+</body>
+</html> 

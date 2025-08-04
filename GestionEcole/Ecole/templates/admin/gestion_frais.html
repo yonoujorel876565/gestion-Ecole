@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Frais - Gestion École</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-graduation-cap"></i> Gestion École
+            </a>
+            <div class="nav-actions">
+                <span class="user-info">
+                    <i class="fas fa-user-shield"></i> Administrateur
+                </span>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour Dashboard
+                </a>
+                <a href="/logout/" class="btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1><i class="fas fa-receipt"></i> Gestion des Frais</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Statistiques des frais -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Frais</h3>
+                    <p class="stat-number">0 FCFA</p>
+                    <p class="stat-label">Tous frais confondus</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Classes Configurées</h3>
+                    <p class="stat-number">{{ classes.count }}</p>
+                    <p class="stat-label">Avec frais définis</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Année Scolaire</h3>
+                    <p class="stat-number">2024-2025</p>
+                    <p class="stat-label">Année en cours</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration des frais -->
+        <div class="frais-container">
+            <div class="config-section">
+                <h2><i class="fas fa-cog"></i> Configuration des Frais par Classe</h2>
+                
+                <form method="post" class="frais-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="definir_frais">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="classe">
+                                <i class="fas fa-layer-group"></i> Classe
+                            </label>
+                            <select id="classe" name="classe" required class="form-select">
+                                <option value="">Sélectionner une classe</option>
+                                {% for classe in classes %}
+                                <option value="{{ classe.id }}">{{ classe.nom }} ({{ classe.session }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="annee_scolaire">
+                                <i class="fas fa-calendar-alt"></i> Année Scolaire
+                            </label>
+                            <input type="text" id="annee_scolaire" name="annee_scolaire" value="2024-2025" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="frais_inscription">
+                                <i class="fas fa-user-plus"></i> Frais d'Inscription (FCFA)
+                            </label>
+                            <input type="number" id="frais_inscription" name="frais_inscription" min="0" step="100" class="form-input" placeholder="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="frais_scolarite">
+                                <i class="fas fa-graduation-cap"></i> Frais de Scolarité (FCFA)
+                            </label>
+                            <input type="number" id="frais_scolarite" name="frais_scolarite" min="0" step="100" class="form-input" placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="frais_cantine">
+                                <i class="fas fa-utensils"></i> Frais de Cantine (FCFA)
+                            </label>
+                            <input type="number" id="frais_cantine" name="frais_cantine" min="0" step="100" class="form-input" placeholder="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="frais_transport">
+                                <i class="fas fa-bus"></i> Frais de Transport (FCFA)
+                            </label>
+                            <input type="number" id="frais_transport" name="frais_transport" min="0" step="100" class="form-input" placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">
+                            <i class="fas fa-align-left"></i> Description (optionnel)
+                        </label>
+                        <textarea id="description" name="description" class="form-textarea" rows="3" placeholder="Description des frais..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer les frais
+                    </button>
+                </form>
+            </div>
+
+            <!-- Aperçu des frais -->
+            <div class="apercu-section">
+                <h2><i class="fas fa-eye"></i> Aperçu des Frais</h2>
+                
+                <div class="frais-cards">
+                    {% for classe in classes %}
+                    <div class="frais-card">
+                        <div class="frais-header">
+                            <h3>{{ classe.nom }}</h3>
+                            <span class="session-badge">{{ classe.session.get_nom_display }}</span>
+                        </div>
+                        
+                        <div class="frais-details">
+                            <div class="frais-item">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscription: <strong>0 FCFA</strong></span>
+                            </div>
+                            <div class="frais-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>Scolarité: <strong>0 FCFA</strong></span>
+                            </div>
+                            <div class="frais-item">
+                                <i class="fas fa-utensils"></i>
+                                <span>Cantine: <strong>0 FCFA</strong></span>
+                            </div>
+                            <div class="frais-item">
+                                <i class="fas fa-bus"></i>
+                                <span>Transport: <strong>0 FCFA</strong></span>
+                            </div>
+                        </div>
+                        
+                        <div class="frais-total">
+                            <span class="total-label">Total:</span>
+                            <span class="total-amount">0 FCFA</span>
+                        </div>
+                        
+                        <div class="frais-actions">
+                            <button class="btn btn-secondary btn-small" onclick="modifierFrais('{{ classe.id }}')">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn btn-success btn-small" onclick="voirEleves('{{ classe.id }}')">
+                                <i class="fas fa-users"></i> Élèves
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>Aucune classe configurée</h3>
+                        <p>Commencez par configurer les frais pour vos classes.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-content h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .frais-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .config-section, .apercu-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-section h2, .apercu-section h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .config-section h2 i, .apercu-section h2 i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .frais-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .frais-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .frais-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #27ae60;
+            transition: transform 0.3s ease;
+        }
+
+        .frais-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .frais-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .frais-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .session-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .frais-details {
+            margin-bottom: 20px;
+        }
+
+        .frais-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #7f8c8d;
+        }
+
+        .frais-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .frais-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-top: 2px solid #ecf0f1;
+            border-bottom: 2px solid #ecf0f1;
+            margin-bottom: 20px;
+        }
+
+        .total-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .frais-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .frais-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .frais-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script>
+        function modifierFrais(classeId) {
+            // Ici vous pouvez implémenter la modification des frais
+            alert('Fonctionnalité de modification des frais à implémenter pour la classe ID: ' + classeId);
+        }
+        
+        function voirEleves(classeId) {
+            // Ici vous pouvez implémenter l'affichage des élèves de la classe
+            alert('Fonctionnalité d\'affichage des élèves à implémenter pour la classe ID: ' + classeId);
+        }
+    </script>
+</body>
+</html> 
